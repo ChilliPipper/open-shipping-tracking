@@ -143,9 +143,9 @@ Please ensure your contributions adhere to the [Code of Conduct](CODE_OF_CONDUCT
 
 ## Changelog
 
-### [1.0.0] - 2024-04-27
+### [0.1.0] - 2024-04-27
 
-- Initial release.
+- Initial beta release.
 - Add shipping carrier, tracking code, and tracking URL fields to WooCommerce orders.
 - Send tracking information via email when order status changes to completed.
 - Implement internationalization support.
