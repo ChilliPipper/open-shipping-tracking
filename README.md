@@ -161,8 +161,6 @@ For support or inquiries, please contact:
 
 - **Author:** Marco Revilla (@ChilliPipper)
 - **Email:** [revillamarco@gmail.com](mailto:revillamarco@gmail.com)
-- **Twitter:** [@ChilliPipper](https://twitter.com/ChilliPipper)
-
 ---
 
 *Thank you for using **Open Shipping Tracking**! If you find this plugin helpful, please consider giving it a star ⭐ on [GitHub](https://github.com/chillipipper/open-shipping-tracking).*
