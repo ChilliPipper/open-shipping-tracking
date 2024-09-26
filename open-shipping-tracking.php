@@ -86,8 +86,15 @@ function ost_send_tracking_email( $order_id ) {
         // Email subject
         $subject = __( 'Your Order Has Been Shipped', 'open-shipping-tracking' );
 
-        // Email headers
-        $headers = array( 'Content-Type: text/html; charset=UTF-8' );
+        // Define your desired sender name and email
+        $sender_name  = get_bloginfo( 'name' ); // Or replace with 'Your Site Name'
+        $sender_email = 'noreply@your-domain.com'; // Replace with your desired sender email
+        
+        // Email headers with custom From name and email
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . $sender_name . ' <' . $sender_email . '>'
+        );
 
         // Email content
         $message  = '<p>' . sprintf( __( 'Dear %s,', 'open-shipping-tracking' ), esc_html( $order->get_billing_first_name() ) ) . '</p>';
