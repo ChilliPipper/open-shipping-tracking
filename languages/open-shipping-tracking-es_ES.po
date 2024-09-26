@@ -1,0 +1,86 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Open Shipping Tracking\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-09-26 08:47+0000\n"
+"PO-Revision-Date: 2024-09-26 08:49+0000\n"
+"Last-Translator: admin\n"
+"Language-Team: Español\n"
+"Language: es_ES\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.11; wp-6.6.2\n"
+"X-Domain: open-shipping-tracking"
+
+#. Author of the plugin
+msgid "@ChilliPipper - Marco Revilla"
+msgstr "@ChilliPipper - Marco Revilla"
+
+#. Description of the plugin
+msgid ""
+"Adds shipping carrier, tracking code, and tracking URL to WooCommerce orders "
+"and sends tracking information via email when order is completed."
+msgstr ""
+"Agrega transportista, código de seguimiento y URL de seguimiento a cada "
+"pedido de WooCommerce y envía información de seguimiento por correo "
+"electrónico cuando se completa el pedido."
+
+#: open-shipping-tracking.php:96
+msgid "Carrier:"
+msgstr "Transportista:"
+
+#: open-shipping-tracking.php:93
+#, php-format
+msgid "Dear %s,"
+msgstr "Hola %s,"
+
+#. Name of the plugin
+msgid "Open Shipping Tracking"
+msgstr "Open Shipping Tracking"
+
+#: open-shipping-tracking.php:35
+msgid "Shipping Carrier"
+msgstr "Transportista"
+
+#: open-shipping-tracking.php:95
+msgid "Shipping Information"
+msgstr "Información de envío"
+
+#: open-shipping-tracking.php:33
+msgid "Shipping Tracking Information"
+msgstr "Información de seguimiento de envío"
+
+#: open-shipping-tracking.php:100
+msgid "Thank you for shopping with us!"
+msgstr "¡Gracias por comprar con nosotros!"
+
+#: open-shipping-tracking.php:94
+msgid "Thank you for your purchase! Here is the tracking info."
+msgstr "¡Gracias por tu compra! Aquí tienes la información de seguimiento."
+
+#: open-shipping-tracking.php:39
+msgid "Tracking Code"
+msgstr "Código de seguimiento"
+
+#: open-shipping-tracking.php:97
+msgid "Tracking Code:"
+msgstr "Código de seguimiento:"
+
+#: open-shipping-tracking.php:43
+msgid "Tracking URL"
+msgstr "URL de seguimiento"
+
+#: open-shipping-tracking.php:98
+msgid "Tracking URL:"
+msgstr "URL de seguimiento:"
+
+#: open-shipping-tracking.php:99
+msgid "You can track your shipment using the link above."
+msgstr "Puede rastrear su envío utilizando el enlace de arriba."
+
+#: open-shipping-tracking.php:87
+msgid "Your Order Has Been Shipped"
+msgstr "Su pedido ha sido enviado"
