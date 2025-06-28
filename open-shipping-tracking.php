@@ -71,51 +71,126 @@ function ost_save_tracking_fields( $order_id ) {
     }
 }
 
-// Hook to send email when order status changes to completed
-add_action( 'woocommerce_order_status_completed', 'ost_send_tracking_email', 10, 1 );
+if ( ! class_exists( 'WC_Email_Shipping_Tracking' ) ) {
+    class WC_Email_Shipping_Tracking extends WC_Email {
 
-function ost_send_tracking_email( $order_id ) {
-    if ( ! $order_id ) {
-        return;
-    }
+        public function __construct() {
+            $this->id             = 'shipping_tracking';
+            $this->customer_email = true;
+            $this->title          = __( 'Shipping Tracking', 'open-shipping-tracking' );
+            $this->description    = __( 'This email is sent to customers when their order is marked as shipped and tracking information is added.', 'open-shipping-tracking' );
+            $this->heading        = __( 'Your order has been shipped', 'open-shipping-tracking' );
+            $this->subject        = __( 'Your {site_title} order has been shipped', 'open-shipping-tracking' );
 
-    $order = wc_get_order( $order_id );
+            $this->template_html  = 'emails/customer-shipping-tracking.php';
+            $this->template_plain = 'emails/plain/customer-shipping-tracking.php';
+            $this->template_base  = plugin_dir_path( __FILE__ ) . 'templates/';
+            
+            // Triggers for this email.
+			add_action( 'woocommerce_order_status_completed_notification', array( $this, 'trigger' ), 10, 2 );
 
-    // Get tracking information
-    $shipping_carrier = get_post_meta( $order_id, '_ost_shipping_carrier', true );
-    $tracking_code    = get_post_meta( $order_id, '_ost_tracking_code', true );
-    $tracking_url     = get_post_meta( $order_id, '_ost_tracking_url', true );
+            // Call parent constructor
+            parent::__construct();
+        }
 
-    // Proceed only if tracking information is available
-    if ( $shipping_carrier && $tracking_code && $tracking_url ) {
+        public function trigger( $order_id, $order = false ) {
+            if ( ! $order ) {
+				$order = wc_get_order( $order_id );
+			}
 
-        // Get customer email
-        $to = $order->get_billing_email();
+            if ( $order ) {
+				$this->object    = $order;
+				$this->recipient = $this->object->get_billing_email();
+                
+                $this->shipping_carrier = get_post_meta( $order_id, '_ost_shipping_carrier', true );
+                $this->tracking_code    = get_post_meta( $order_id, '_ost_tracking_code', true );
+                $this->tracking_url     = get_post_meta( $order_id, '_ost_tracking_url', true );
 
-        // Email subject
-        $subject = __( 'Your Order Has Been Shipped', 'open-shipping-tracking' );
+                // Only send if we have tracking info.
+                if ( ! $this->is_enabled() || ! $this->recipient || ! $this->shipping_carrier || ! $this->tracking_code || ! $this->tracking_url ) {
+                    return;
+                }
 
-        // Define your desired sender name and email
-        $sender_name  = get_bloginfo( 'name' ); // Or replace with 'Your Site Name'
-        $sender_email = 'noreply@your-domain.com'; // Replace with your desired sender email
+                $this->send( $this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments() );
+            }
+        }
+
+        public function get_content_html() {
+            return wc_get_template_html(
+                $this->template_html,
+                array(
+                    'order'              => $this->object,
+                    'email_heading'      => $this->get_heading(),
+                    'shipping_carrier'   => $this->shipping_carrier,
+                    'tracking_code'      => $this->tracking_code,
+                    'tracking_url'       => $this->tracking_url,
+                    'sent_to_admin'      => false,
+                    'plain_text'         => false,
+                    'email'              => $this,
+                ),
+                '',
+                $this->template_base
+            );
+        }
+
+        public function get_content_plain() {
+            return wc_get_template_html(
+                $this->template_plain,
+                array(
+                    'order'              => $this->object,
+                    'email_heading'      => $this->get_heading(),
+                    'shipping_carrier'   => $this->shipping_carrier,
+                    'tracking_code'      => $this->tracking_code,
+                    'tracking_url'       => $this->tracking_url,
+                    'sent_to_admin'      => false,
+                    'plain_text'         => true,
+                    'email'              => $this,
+                ),
+                '',
+                $this->template_base
+            );
+        }
         
-        // Email headers with custom From name and email
-        $headers = array(
-            'Content-Type: text/html; charset=UTF-8',
-            'From: ' . $sender_name . ' <' . $sender_email . '>'
-        );
-
-        // Email content
-        $message  = '<p>' . sprintf( __( 'Dear %s,', 'open-shipping-tracking' ), esc_html( $order->get_billing_first_name() ) ) . '</p>';
-        $message .= '<p>' . __( 'Thank you for your purchase! Here is the tracking info.', 'open-shipping-tracking' ) . '</p>';
-        $message .= '<h3>' . __( 'Shipping Information', 'open-shipping-tracking' ) . '</h3>';
-        $message .= '<p><strong>' . __( 'Carrier:', 'open-shipping-tracking' ) . '</strong> ' . esc_html( $shipping_carrier ) . '</p>';
-        $message .= '<p><strong>' . __( 'Tracking Code:', 'open-shipping-tracking' ) . '</strong> ' . esc_html( $tracking_code ) . '</p>';
-        $message .= '<p><strong>' . __( 'Tracking URL:', 'open-shipping-tracking' ) . '</strong> <a href="' . esc_url( $tracking_url ) . '" target="_blank">' . esc_html( $tracking_url ) . '</a></p>';
-        $message .= '<p>' . __( 'You can track your shipment using the link above.', 'open-shipping-tracking' ) . '</p>';
-        $message .= '<p>' . __( 'Thank you for shopping with us!', 'open-shipping-tracking' ) . '</p>';
-
-        // Send the email
-        wp_mail( $to, $subject, $message, $headers );
+        public function init_form_fields() {
+			$this->form_fields = array(
+				'enabled'    => array(
+					'title'   => __( 'Enable/Disable', 'woocommerce' ),
+					'type'    => 'checkbox',
+					'label'   => __( 'Enable this email notification', 'woocommerce' ),
+					'default' => 'yes',
+				),
+				'subject'    => array(
+					'title'       => __( 'Subject', 'woocommerce' ),
+					'type'        => 'text',
+					'desc_tip'    => true,
+					'description' => sprintf( __( 'Available placeholders: %s', 'woocommerce' ), '<code>{site_title}, {order_date}, {order_number}</code>' ),
+					'placeholder' => $this->get_default_subject(),
+					'default'     => '',
+				),
+				'heading'    => array(
+					'title'       => __( 'Email Heading', 'woocommerce' ),
+					'type'        => 'text',
+					'desc_tip'    => true,
+					'description' => sprintf( __( 'Available placeholders: %s', 'woocommerce' ), '<code>{site_title}, {order_date}, {order_number}</code>' ),
+					'placeholder' => $this->get_default_heading(),
+					'default'     => '',
+				),
+				'email_type' => array(
+					'title'       => __( 'Email type', 'woocommerce' ),
+					'type'        => 'select',
+					'description' => __( 'Choose which format of email to send.', 'woocommerce' ),
+					'default'     => 'html',
+					'class'       => 'email_type wc-enhanced-select',
+					'options'     => $this->get_email_type_options(),
+					'desc_tip'    => true,
+				),
+			);
+		}
     }
 }
+
+function add_shipping_tracking_email( $email_classes ) {
+    $email_classes['WC_Email_Shipping_Tracking'] = new WC_Email_Shipping_Tracking();
+    return $email_classes;
+}
+add_filter( 'woocommerce_email_classes', 'add_shipping_tracking_email' );
