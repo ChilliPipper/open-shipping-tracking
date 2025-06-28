@@ -194,3 +194,28 @@ function add_shipping_tracking_email( $email_classes ) {
     return $email_classes;
 }
 add_filter( 'woocommerce_email_classes', 'add_shipping_tracking_email' );
+
+// Display tracking information on the "My Account" order view page
+add_action( 'woocommerce_order_details_after_order_table', 'ost_display_tracking_info_on_account_page', 20 );
+
+function ost_display_tracking_info_on_account_page( $order ) {
+    if ( ! $order ) {
+        return;
+    }
+
+    $order_id = $order->get_id();
+    $shipping_carrier = get_post_meta( $order_id, '_ost_shipping_carrier', true );
+    $tracking_code    = get_post_meta( $order_id, '_ost_tracking_code', true );
+    $tracking_url     = get_post_meta( $order_id, '_ost_tracking_url', true );
+
+    if ( $shipping_carrier && $tracking_code && $tracking_url ) {
+        ?>
+        <section class="woocommerce-customer-details">
+            <h2 class="woocommerce-column__title"><?php esc_html_e( 'Shipping Information', 'open-shipping-tracking' ); ?></h2>
+            <p><strong><?php esc_html_e( 'Carrier:', 'open-shipping-tracking' ); ?></strong> <?php echo esc_html( $shipping_carrier ); ?></p>
+            <p><strong><?php esc_html_e( 'Tracking Code:', 'open-shipping-tracking' ); ?></strong> <?php echo esc_html( $tracking_code ); ?></p>
+            <p><strong><?php esc_html_e( 'Track your order:', 'open-shipping-tracking' ); ?></strong> <a href="<?php echo esc_url( $tracking_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Click here to track your shipment', 'open-shipping-tracking' ); ?></a></p>
+        </section>
+        <?php
+    }
+}
