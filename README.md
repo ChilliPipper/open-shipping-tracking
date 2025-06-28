@@ -106,7 +106,7 @@ Contributions are welcome! Whether you're fixing bugs, improving documentation, 
 
 ## Changelog
 
-### [1.1.0] - 2024-05-23
+### [1.1.0] - 2025-06-28
 
 - **Feat:** Added manual "Resend Shipping Tracking Email" button on the order edit page.
 - **Feat:** Added a "Shipping Tracking" column to the admin orders list for quick viewing.
@@ -114,8 +114,7 @@ Contributions are welcome! Whether you're fixing bugs, improving documentation, 
 - **Refactor:** Replaced `wp_mail` with a dedicated, customizable WooCommerce email class (`WC_Email_Shipping_Tracking`).
 - **Refactor:** Upgraded all data handling to use WooCommerce CRUD methods for High-Performance Order Storage (HPOS) compatibility.
 - **Security:** Added nonces and capability checks to the data saving process.
-- **Chore:** Updated plugin header to declare HPOS compatibility.
-- **Chore:** Created HTML and plain text email templates.
+- **Feat:** Created HTML and plain text email templates.
 
 ### [1.0.0] - 2024-05-22
 
