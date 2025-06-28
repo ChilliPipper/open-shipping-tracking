@@ -1,6 +1,6 @@
 # Open Shipping Tracking
 
-**Open Shipping Tracking** is a WordPress plugin designed to seamlessly integrate with WooCommerce. It adds shipping carrier details, tracking codes, and tracking URLs to WooCommerce orders. Additionally, it automatically sends tracking information to customers via email when their order status changes to "Completed."
+**Open Shipping Tracking** is a lightweight yet powerful WordPress plugin that enhances WooCommerce by adding a complete shipping tracking system to your orders. It allows you to add a carrier, tracking code, and tracking URL, then automatically notifies customers and displays the information in their account.
 
 ## Table of Contents
 
@@ -17,10 +17,12 @@
 ## Features
 
 - **Add Shipping Tracking Information:** Easily add shipping carrier, tracking code, and tracking URL to each WooCommerce order.
-- **Automated Email Notifications:** Sends a customized email containing tracking information to customers when their order is marked as completed.
-- **Admin Order Page Integration:** Provides a user-friendly interface on the WooCommerce admin order edit page to manage tracking details.
-- **Internationalization Ready:** Fully translatable, allowing you to cater to a multilingual audience.
-- **Secure Data Handling:** Implements proper sanitization and escaping to ensure data security.
+- **HPOS Compatible:** Fully compatible with WooCommerce's High-Performance Order Storage for improved speed and scalability.
+- **Automated & Manual Email Notifications:** Sends a customizable WooCommerce email with tracking info when an order is completed, with an option to resend it manually at any time.
+- **Customer Account Integration:** Displays the tracking information directly on the customer's "My Account" order details page for easy access.
+- **Admin Order List Column:** Adds a "Shipping Tracking" column to the main order list for at-a-glance visibility.
+- **Secure & Robust:** Built with security in mind, using nonces and proper data sanitization.
+- **Translation Ready:** Fully prepared for internationalization with a loaded text domain.
 
 ## Installation
 
@@ -44,45 +46,36 @@ Follow these steps to install and activate the **Open Shipping Tracking** plugin
 
 ## Usage
 
-Once activated, **Open Shipping Tracking** integrates with WooCommerce and provides the following functionalities:
+Once activated, **Open Shipping Tracking** integrates seamlessly into your WooCommerce workflow.
 
-### Adding Tracking Information
+### Adding & Managing Tracking Information
 
-1. **Navigate to Orders:**
-   - Go to **WooCommerce > Orders** in your WordPress admin dashboard.
+1. **Navigate to an Order:** Go to **WooCommerce > Orders** and click on an order to edit it.
+2. **Find the Tracking Meta Box:** Scroll down to the **Shipping Tracking Information** section on the order edit page.
+3. **Enter Tracking Details:** Fill in the **Shipping Carrier**, **Tracking Code**, and **Tracking URL**.
+4. **Save the Order:** Click **Update** to save the information.
 
-2. **Edit an Order:**
-   - Click on an order you wish to add tracking information to.
+### Viewing Tracking Information
 
-3. **Add Tracking Details:**
-   - Scroll down to the **Shipping Tracking Information** section.
-   - Enter the **Shipping Carrier**, **Tracking Code**, and **Tracking URL**.
-   - Click **Update** to save the information.
+- **Admin Order List:** A "Shipping Tracking" column will appear in the main orders list, showing the carrier and a clickable tracking code.
+- **Customer's Account:** Customers can view the same tracking information by going to **My Account > Orders** and clicking "View" on a specific order.
 
-### Automated Email Notifications
+### Sending Tracking Emails
 
-When an order's status changes to **Completed**, the plugin automatically sends an email to the customer containing the tracking information. Ensure that your WooCommerce email settings are correctly configured to utilize this feature.
+- **Automatic:** The tracking email is sent automatically when an order's status is first changed to **Completed**.
+- **Manual:** After tracking info is saved, a **"Resend Shipping Tracking Email"** button will appear in the meta box. Click this to send the email at any time.
+
+### Customizing the Email
+
+You can customize the email template by navigating to **WooCommerce > Settings > Emails** and finding the **Shipping Tracking** email. You can manage the subject, heading, and other settings from there.
 
 ## Internationalization
 
-**Open Shipping Tracking** is fully translatable and ready for international use.
+**Open Shipping Tracking** is fully translatable.
 
-### Translating the Plugin
-
-1. **Locate the Language Files:**
-   - The language files are stored in the `/languages` directory within the plugin folder.
-
-2. **Use a Translation Tool:**
-   - You can use tools like [Poedit](https://poedit.net/) or plugins like [Loco Translate](https://wordpress.org/plugins/loco-translate/) to manage translations.
-
-3. **Create a `.pot` File:**
-   - Extract translatable strings and generate a `.pot` file using your preferred tool.
-
-4. **Add Translations:**
-   - Create `.po` and `.mo` files for your target language and place them in the `/languages` directory.
-
-5. **Verify Translations:**
-   - Switch your WordPress site language to ensure translations are correctly applied.
+1. **Language Files:** The main `.pot` file is located in the `/languages` directory.
+2. **Translation Tools:** Use a tool like [Poedit](https://poedit.net/) or the [Loco Translate](https://wordpress.org/plugins/loco-translate/) plugin to create your `.po` and `.mo` files.
+3. **Upload Translations:** Place your translation files in the `/languages` directory of the plugin. WordPress will automatically use the correct file based on your site's language setting.
 
 ## Frequently Asked Questions (FAQ)
 
@@ -90,62 +83,43 @@ When an order's status changes to **Completed**, the plugin automatically sends 
 
 Yes, the plugin allows you to input any shipping carrier name, tracking code, and tracking URL. It's flexible and not limited to specific carriers.
 
-### 2. **Can I customize the email template?**
+### 2. **Is this plugin compatible with High-Performance Order Storage (HPOS)?**
 
-Currently, the email template is predefined. However, you can customize it by modifying the plugin's code or extending its functionality.
+Yes, as of version 1.1.0, the plugin is fully compatible with HPOS.
 
-### 3. **Is the plugin compatible with the latest version of WooCommerce?**
-
-I'll try to regularly test and maintain it to ensure compatibility with the latest WooCommerce versions. Please check the [Releases](https://github.com/chillipipper/open-shipping-tracking/releases) page for updates.
-
-### 4. **How can I contribute to the plugin?**
+### 3. **How can I contribute to the plugin?**
 
 See the [Contributing](#contributing) section below for guidelines.
 
 ## Contributing
 
-Contributions are welcome! Whether you're fixing bugs, improving documentation, or adding new features, your help is appreciated since I don't have a lot of time.
+Contributions are welcome! Whether you're fixing bugs, improving documentation, or adding new features, your help is appreciated.
 
 ### Steps to Contribute
 
-1. **Fork the Repository:**
-   - Click the **Fork** button at the top-right corner of this page.
-
-2. **Clone Your Fork:**
-   ```bash
-   git clone https://github.com/your-username/open-shipping-tracking.git
-   ```
-
-3. **Create a New Branch:**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-4. **Make Your Changes:**
-   - Implement your feature or bug fix.
-
-5. **Commit Your Changes:**
-   ```bash
-   git commit -m "Add your commit message here"
-   ```
-
-6. **Push to Your Fork:**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-7. **Submit a Pull Request:**
-   - Go to the original repository and create a pull request from your fork.
-
-### Code of Conduct
-
-Please ensure your contributions adhere to the [Code of Conduct](CODE_OF_CONDUCT.md).
+1. **Fork the Repository**
+2. **Clone Your Fork**
+3. **Create a New Branch**
+4. **Make Your Changes**
+5. **Commit and Push**
+6. **Submit a Pull Request**
 
 ## Changelog
 
-### [0.1.0] - 2024-04-27
+### [1.1.0] - 2024-05-23
 
-- Initial beta release.
+- **Feat:** Added manual "Resend Shipping Tracking Email" button on the order edit page.
+- **Feat:** Added a "Shipping Tracking" column to the admin orders list for quick viewing.
+- **Feat:** Display tracking information on the customer's "My Account" order view page.
+- **Refactor:** Replaced `wp_mail` with a dedicated, customizable WooCommerce email class (`WC_Email_Shipping_Tracking`).
+- **Refactor:** Upgraded all data handling to use WooCommerce CRUD methods for High-Performance Order Storage (HPOS) compatibility.
+- **Security:** Added nonces and capability checks to the data saving process.
+- **Chore:** Updated plugin header to declare HPOS compatibility.
+- **Chore:** Created HTML and plain text email templates.
+
+### [1.0.0] - 2024-05-22
+
+- Initial stable release.
 - Add shipping carrier, tracking code, and tracking URL fields to WooCommerce orders.
 - Send tracking information via email when order status changes to completed.
 - Implement internationalization support.
