@@ -50,6 +50,11 @@ function ost_add_tracking_fields_to_order( $order ) {
             <label for="ost_tracking_url"><?php esc_html_e( 'Tracking URL', 'open-shipping-tracking' ); ?>:</label>
             <input type="url" name="ost_tracking_url" id="ost_tracking_url" value="<?php echo esc_attr( $tracking_url ); ?>" />
         </p>
+        <?php if ( $shipping_carrier && $tracking_code && $tracking_url ) : ?>
+            <p class="form-field form-field-wide">
+                <button type="submit" class="button" name="ost_send_tracking_now" value="1"><?php esc_html_e( 'Resend Shipping Tracking Email', 'open-shipping-tracking' ); ?></button>
+            </p>
+        <?php endif; ?>
     </div>
     <?php
 }
@@ -58,6 +63,7 @@ function ost_add_tracking_fields_to_order( $order ) {
 add_action( 'woocommerce_process_shop_order_meta', 'ost_save_tracking_fields' );
 
 function ost_save_tracking_fields( $order_id ) {
+	// First, verify the nonce and user capabilities. This is for both saving and manual sending.
 	if ( ! isset( $_POST['ost_tracking_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ost_tracking_nonce'] ) ), 'ost_save_tracking_fields' ) ) {
 		return;
 	}
@@ -66,6 +72,16 @@ function ost_save_tracking_fields( $order_id ) {
 		return;
 	}
 
+	// Handle manual email sending if the button was clicked
+	if ( isset( $_POST['ost_send_tracking_now'] ) ) {
+		// Trigger the email
+		WC()->mailer()->get_emails()['WC_Email_Shipping_Tracking']->trigger( $order_id );
+		
+		// Set a transient to show the notice on the next page load
+		set_transient( 'ost_manual_email_sent_notice_' . get_current_user_id(), true, 5 );
+	}
+
+	// Now, handle saving the meta fields. This will run regardless of whether the email was sent.
 	$order = wc_get_order( $order_id );
 	if ( ! $order ) {
 		return;
@@ -278,5 +294,18 @@ function ost_add_tracking_column_content( $column, $post_id ) {
             // Display a dash if no tracking info is present.
             echo '&mdash;';
         }
+    }
+}
+
+// Display an admin notice after manually sending the tracking email
+add_action( 'admin_notices', 'ost_display_manual_email_sent_notice' );
+function ost_display_manual_email_sent_notice() {
+    if ( get_transient( 'ost_manual_email_sent_notice_' . get_current_user_id() ) ) {
+        ?>
+        <div class="notice notice-success is-dismissible">
+            <p><?php esc_html_e( 'The shipping tracking email has been sent to the customer.', 'open-shipping-tracking' ); ?></p>
+        </div>
+        <?php
+        delete_transient( 'ost_manual_email_sent_notice_' . get_current_user_id() );
     }
 }
