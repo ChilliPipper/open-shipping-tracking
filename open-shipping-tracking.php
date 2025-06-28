@@ -2,11 +2,14 @@
 /**
  * Plugin Name: Open Shipping Tracking
  * Description: Adds shipping carrier, tracking code, and tracking URL to WooCommerce orders and sends tracking information via email when order is completed.
- * Version: 1.0
+ * Version: 1.1.0
  * Author: @ChilliPipper - Marco Revilla
  * License: GPL2
  * Text Domain: open-shipping-tracking
  * Domain Path: /languages
+ * WC requires at least: 3.0
+ * WC tested up to: 8.8
+ * Features: high-performance-order-storage
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,10 +27,13 @@ function ost_load_textdomain() {
 add_action( 'woocommerce_admin_order_data_after_shipping_address', 'ost_add_tracking_fields_to_order' );
 
 function ost_add_tracking_fields_to_order( $order ) {
+    if ( ! $order instanceof WC_Order ) {
+        return;
+    }
     // Get existing meta data
-    $shipping_carrier = get_post_meta( $order->get_id(), '_ost_shipping_carrier', true );
-    $tracking_code    = get_post_meta( $order->get_id(), '_ost_tracking_code', true );
-    $tracking_url     = get_post_meta( $order->get_id(), '_ost_tracking_url', true );
+    $shipping_carrier = $order->get_meta( '_ost_shipping_carrier', true );
+    $tracking_code    = $order->get_meta( '_ost_tracking_code', true );
+    $tracking_url     = $order->get_meta( '_ost_tracking_url', true );
     ?>
     <div class="shipping_tracking">
         <h3><?php esc_html_e( 'Shipping Tracking Information', 'open-shipping-tracking' ); ?></h3>
@@ -60,15 +66,22 @@ function ost_save_tracking_fields( $order_id ) {
 		return;
 	}
 
+	$order = wc_get_order( $order_id );
+	if ( ! $order ) {
+		return;
+	}
+
     if ( isset( $_POST['ost_shipping_carrier'] ) ) {
-        update_post_meta( $order_id, '_ost_shipping_carrier', sanitize_text_field( wp_unslash( $_POST['ost_shipping_carrier'] ) ) );
+        $order->update_meta_data( '_ost_shipping_carrier', sanitize_text_field( wp_unslash( $_POST['ost_shipping_carrier'] ) ) );
     }
     if ( isset( $_POST['ost_tracking_code'] ) ) {
-        update_post_meta( $order_id, '_ost_tracking_code', sanitize_text_field( wp_unslash( $_POST['ost_tracking_code'] ) ) );
+        $order->update_meta_data( '_ost_tracking_code', sanitize_text_field( wp_unslash( $_POST['ost_tracking_code'] ) ) );
     }
     if ( isset( $_POST['ost_tracking_url'] ) ) {
-        update_post_meta( $order_id, '_ost_tracking_url', esc_url_raw( wp_unslash( $_POST['ost_tracking_url'] ) ) );
+        $order->update_meta_data( '_ost_tracking_url', esc_url_raw( wp_unslash( $_POST['ost_tracking_url'] ) ) );
     }
+
+	$order->save();
 }
 
 if ( ! class_exists( 'WC_Email_Shipping_Tracking' ) ) {
@@ -102,9 +115,9 @@ if ( ! class_exists( 'WC_Email_Shipping_Tracking' ) ) {
 				$this->object    = $order;
 				$this->recipient = $this->object->get_billing_email();
                 
-                $this->shipping_carrier = get_post_meta( $order_id, '_ost_shipping_carrier', true );
-                $this->tracking_code    = get_post_meta( $order_id, '_ost_tracking_code', true );
-                $this->tracking_url     = get_post_meta( $order_id, '_ost_tracking_url', true );
+                $this->shipping_carrier = $this->object->get_meta( '_ost_shipping_carrier', true );
+                $this->tracking_code    = $this->object->get_meta( '_ost_tracking_code', true );
+                $this->tracking_url     = $this->object->get_meta( '_ost_tracking_url', true );
 
                 // Only send if we have tracking info.
                 if ( ! $this->is_enabled() || ! $this->recipient || ! $this->shipping_carrier || ! $this->tracking_code || ! $this->tracking_url ) {
@@ -199,14 +212,13 @@ add_filter( 'woocommerce_email_classes', 'add_shipping_tracking_email' );
 add_action( 'woocommerce_order_details_after_order_table', 'ost_display_tracking_info_on_account_page', 20 );
 
 function ost_display_tracking_info_on_account_page( $order ) {
-    if ( ! $order ) {
+    if ( ! $order instanceof WC_Order ) {
         return;
     }
 
-    $order_id = $order->get_id();
-    $shipping_carrier = get_post_meta( $order_id, '_ost_shipping_carrier', true );
-    $tracking_code    = get_post_meta( $order_id, '_ost_tracking_code', true );
-    $tracking_url     = get_post_meta( $order_id, '_ost_tracking_url', true );
+    $shipping_carrier = $order->get_meta( '_ost_shipping_carrier', true );
+    $tracking_code    = $order->get_meta( '_ost_tracking_code', true );
+    $tracking_url     = $order->get_meta( '_ost_tracking_url', true );
 
     if ( $shipping_carrier && $tracking_code && $tracking_url ) {
         ?>
@@ -238,9 +250,15 @@ function ost_add_tracking_column_header( $columns ) {
 add_action( 'manage_shop_order_posts_custom_column', 'ost_add_tracking_column_content', 10, 2 );
 function ost_add_tracking_column_content( $column, $post_id ) {
     if ( 'shipping_tracking' === $column ) {
-        $shipping_carrier = get_post_meta( $post_id, '_ost_shipping_carrier', true );
-        $tracking_code    = get_post_meta( $post_id, '_ost_tracking_code', true );
-        $tracking_url     = get_post_meta( $post_id, '_ost_tracking_url', true );
+		$order = wc_get_order( $post_id );
+		if ( ! $order ) {
+			echo '&mdash;';
+			return;
+		}
+
+        $shipping_carrier = $order->get_meta( '_ost_shipping_carrier', true );
+        $tracking_code    = $order->get_meta( '_ost_tracking_code', true );
+        $tracking_url     = $order->get_meta( '_ost_tracking_url', true );
 
         if ( ! empty( $tracking_code ) ) {
             $content = '';
