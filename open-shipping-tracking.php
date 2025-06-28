@@ -31,7 +31,7 @@ function ost_add_tracking_fields_to_order( $order ) {
     ?>
     <div class="shipping_tracking">
         <h3><?php esc_html_e( 'Shipping Tracking Information', 'open-shipping-tracking' ); ?></h3>
-        <?php wp_nonce_field( 'ost_save_tracking_fields', 'ost_tracking_nonce' ); ?>
+		<?php wp_nonce_field( 'ost_save_tracking_fields', 'ost_tracking_nonce' ); ?>
         <p class="form-field form-field-wide">
             <label for="ost_shipping_carrier"><?php esc_html_e( 'Shipping Carrier', 'open-shipping-tracking' ); ?>:</label>
             <input type="text" name="ost_shipping_carrier" id="ost_shipping_carrier" value="<?php echo esc_attr( $shipping_carrier ); ?>" />
@@ -52,10 +52,13 @@ function ost_add_tracking_fields_to_order( $order ) {
 add_action( 'woocommerce_process_shop_order_meta', 'ost_save_tracking_fields' );
 
 function ost_save_tracking_fields( $order_id ) {
-    // Nonce verification
-    if ( ! isset( $_POST['ost_tracking_nonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['ost_tracking_nonce'] ), 'ost_save_tracking_fields' ) ) {
-        return;
-    }
+	if ( ! isset( $_POST['ost_tracking_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ost_tracking_nonce'] ) ), 'ost_save_tracking_fields' ) ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_shop_order', $order_id ) ) {
+		return;
+	}
 
     if ( isset( $_POST['ost_shipping_carrier'] ) ) {
         update_post_meta( $order_id, '_ost_shipping_carrier', sanitize_text_field( wp_unslash( $_POST['ost_shipping_carrier'] ) ) );
@@ -114,40 +117,5 @@ function ost_send_tracking_email( $order_id ) {
 
         // Send the email
         wp_mail( $to, $subject, $message, $headers );
-    }
-}
-
-// Hook to display tracking info on the order details page
-add_action( 'woocommerce_order_details_after_order_table', 'ost_display_tracking_info_on_order_page', 20 );
-
-function ost_display_tracking_info_on_order_page( $order ) {
-    $order_id = $order->get_id();
-
-    // Get tracking information
-    $shipping_carrier = get_post_meta( $order_id, '_ost_shipping_carrier', true );
-    $tracking_code    = get_post_meta( $order_id, '_ost_tracking_code', true );
-    $tracking_url     = get_post_meta( $order_id, '_ost_tracking_url', true );
-
-    // Proceed only if tracking information is available
-    if ( $shipping_carrier && $tracking_code && $tracking_url ) {
-        ?>
-        <h2><?php esc_html_e( 'Shipping Information', 'open-shipping-tracking' ); ?></h2>
-        <table class="woocommerce-table woocommerce-table--shipping-info shop_table shipping_info">
-            <tbody>
-                <tr>
-                    <th><?php esc_html_e( 'Carrier:', 'open-shipping-tracking' ); ?></th>
-                    <td><?php echo esc_html( $shipping_carrier ); ?></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Tracking Code:', 'open-shipping-tracking' ); ?></th>
-                    <td><?php echo esc_html( $tracking_code ); ?></td>
-                </tr>
-                <tr>
-                    <th><?php esc_html_e( 'Track Shipment:', 'open-shipping-tracking' ); ?></th>
-                    <td><a href="<?php echo esc_url( $tracking_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Click here to track your shipment', 'open-shipping-tracking' ); ?></a></td>
-                </tr>
-            </tbody>
-        </table>
-        <?php
     }
 }
