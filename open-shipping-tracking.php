@@ -219,3 +219,46 @@ function ost_display_tracking_info_on_account_page( $order ) {
         <?php
     }
 }
+
+// Add a custom column to the admin orders list for shipping tracking
+add_filter( 'manage_edit-shop_order_columns', 'ost_add_tracking_column_header' );
+function ost_add_tracking_column_header( $columns ) {
+    $new_columns = array();
+    foreach ( $columns as $column_name => $column_info ) {
+        $new_columns[ $column_name ] = $column_info;
+        // Add our column after the order status column
+        if ( 'order_status' === $column_name ) {
+            $new_columns['shipping_tracking'] = __( 'Shipping Tracking', 'open-shipping-tracking' );
+        }
+    }
+    return $new_columns;
+}
+
+// Populate the custom column with tracking data
+add_action( 'manage_shop_order_posts_custom_column', 'ost_add_tracking_column_content', 10, 2 );
+function ost_add_tracking_column_content( $column, $post_id ) {
+    if ( 'shipping_tracking' === $column ) {
+        $shipping_carrier = get_post_meta( $post_id, '_ost_shipping_carrier', true );
+        $tracking_code    = get_post_meta( $post_id, '_ost_tracking_code', true );
+        $tracking_url     = get_post_meta( $post_id, '_ost_tracking_url', true );
+
+        if ( ! empty( $tracking_code ) ) {
+            $content = '';
+            if ( ! empty( $shipping_carrier ) ) {
+                $content .= '<strong>' . esc_html( $shipping_carrier ) . '</strong><br/>';
+            }
+            
+            if ( ! empty( $tracking_url ) ) {
+                $content .= '<a href="' . esc_url( $tracking_url ) . '" target="_blank" title="' . esc_attr__( 'Track this shipment', 'open-shipping-tracking' ) . '">' . esc_html( $tracking_code ) . '</a>';
+            } else {
+                $content .= esc_html( $tracking_code );
+            }
+            // Using echo within this hook is standard practice. The content is escaped above.
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            echo $content;
+        } else {
+            // Display a dash if no tracking info is present.
+            echo '&mdash;';
+        }
+    }
+}
