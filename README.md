@@ -106,6 +106,17 @@ Contributions are welcome! Whether you're fixing bugs, improving documentation, 
 
 ## Changelog
 
+### [1.2.0] - 2025-08-04
+
+- **Compatibility:** Fixed translation loading for WordPress 6.7+ compatibility (moved from `plugins_loaded` to `init` hook).
+- **Compatibility:** Added HPOS-compatible column hooks for WooCommerce 9.0+ new orders screen.
+- **Security:** Enhanced nonce validation with additional referrer checks.
+- **Feat:** Added additional email trigger for direct order status changes to improve delivery reliability.
+- **Feat:** Implemented comprehensive error handling and logging for email operations.
+- **Feat:** Added success/error notifications for manual email sending with proper user feedback.
+- **Update:** Updated version requirements - WooCommerce 6.0-9.5, PHP 7.4+.
+- **Docs:** Added CLAUDE.md development documentation for future maintenance.
+
 ### [1.1.0] - 2025-06-28
 
 - **Feat:** Added manual "Resend Shipping Tracking Email" button on the order edit page.

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Open Shipping Tracking
  * Description: Adds shipping carrier, tracking code, and tracking URL to WooCommerce orders and sends tracking information via email when order is completed.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: @ChilliPipper - Marco Revilla
  * License: GPL2
  * Text Domain: open-shipping-tracking
