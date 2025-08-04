@@ -7,8 +7,9 @@
  * License: GPL2
  * Text Domain: open-shipping-tracking
  * Domain Path: /languages
- * WC requires at least: 3.0
- * WC tested up to: 8.8
+ * WC requires at least: 6.0
+ * WC tested up to: 9.5
+ * Requires PHP: 7.4
  * Features: high-performance-order-storage
  */
 
@@ -17,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Load plugin text domain for translations
-add_action( 'plugins_loaded', 'ost_load_textdomain' );
+add_action( 'init', 'ost_load_textdomain' );
 
 function ost_load_textdomain() {
     load_plugin_textdomain( 'open-shipping-tracking', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
@@ -67,6 +68,11 @@ function ost_save_tracking_fields( $order_id ) {
 	if ( ! isset( $_POST['ost_tracking_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ost_tracking_nonce'] ) ), 'ost_save_tracking_fields' ) ) {
 		return;
 	}
+	
+	// Additional security check for referrer
+	if ( ! check_admin_referer( 'ost_save_tracking_fields', 'ost_tracking_nonce' ) ) {
+		return;
+	}
 
 	if ( ! current_user_can( 'edit_shop_order', $order_id ) ) {
 		return;
@@ -74,11 +80,22 @@ function ost_save_tracking_fields( $order_id ) {
 
 	// Handle manual email sending if the button was clicked
 	if ( isset( $_POST['ost_send_tracking_now'] ) ) {
-		// Trigger the email
-		WC()->mailer()->get_emails()['WC_Email_Shipping_Tracking']->trigger( $order_id );
-		
-		// Set a transient to show the notice on the next page load
-		set_transient( 'ost_manual_email_sent_notice_' . get_current_user_id(), true, 5 );
+		// Trigger the email with error handling
+		try {
+			$emails = WC()->mailer()->get_emails();
+			if ( isset( $emails['WC_Email_Shipping_Tracking'] ) ) {
+				$emails['WC_Email_Shipping_Tracking']->trigger( $order_id );
+				// Set a transient to show success notice on the next page load
+				set_transient( 'ost_manual_email_sent_notice_' . get_current_user_id(), 'success', 5 );
+			} else {
+				// Set error notice if email class not found
+				set_transient( 'ost_manual_email_sent_notice_' . get_current_user_id(), 'error', 5 );
+			}
+		} catch ( Exception $e ) {
+			// Set error notice if email sending fails
+			set_transient( 'ost_manual_email_sent_notice_' . get_current_user_id(), 'error', 5 );
+			error_log( 'Open Shipping Tracking: Failed to send email - ' . $e->getMessage() );
+		}
 	}
 
 	// Now, handle saving the meta fields. This will run regardless of whether the email was sent.
@@ -117,6 +134,8 @@ if ( ! class_exists( 'WC_Email_Shipping_Tracking' ) ) {
             
             // Triggers for this email.
 			add_action( 'woocommerce_order_status_completed_notification', array( $this, 'trigger' ), 10, 2 );
+			// Additional trigger for direct status changes
+			add_action( 'woocommerce_order_status_changed', array( $this, 'status_changed_trigger' ), 10, 3 );
 
             // Call parent constructor
             parent::__construct();
@@ -141,6 +160,13 @@ if ( ! class_exists( 'WC_Email_Shipping_Tracking' ) ) {
                 }
 
                 $this->send( $this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments() );
+            }
+        }
+
+        public function status_changed_trigger( $order_id, $from_status, $to_status ) {
+            // Only trigger when changing to completed status and we have tracking info
+            if ( 'completed' === $to_status ) {
+                $this->trigger( $order_id );
             }
         }
 
@@ -250,6 +276,8 @@ function ost_display_tracking_info_on_account_page( $order ) {
 
 // Add a custom column to the admin orders list for shipping tracking
 add_filter( 'manage_edit-shop_order_columns', 'ost_add_tracking_column_header' );
+// HPOS compatibility - add column for new orders screen
+add_filter( 'manage_woocommerce_page_wc-orders_columns', 'ost_add_tracking_column_header' );
 function ost_add_tracking_column_header( $columns ) {
     $new_columns = array();
     foreach ( $columns as $column_name => $column_info ) {
@@ -264,6 +292,8 @@ function ost_add_tracking_column_header( $columns ) {
 
 // Populate the custom column with tracking data
 add_action( 'manage_shop_order_posts_custom_column', 'ost_add_tracking_column_content', 10, 2 );
+// HPOS compatibility - populate column for new orders screen
+add_action( 'manage_woocommerce_page_wc-orders_custom_column', 'ost_add_tracking_column_content', 10, 2 );
 function ost_add_tracking_column_content( $column, $post_id ) {
     if ( 'shipping_tracking' === $column ) {
 		$order = wc_get_order( $post_id );
@@ -300,12 +330,21 @@ function ost_add_tracking_column_content( $column, $post_id ) {
 // Display an admin notice after manually sending the tracking email
 add_action( 'admin_notices', 'ost_display_manual_email_sent_notice' );
 function ost_display_manual_email_sent_notice() {
-    if ( get_transient( 'ost_manual_email_sent_notice_' . get_current_user_id() ) ) {
-        ?>
-        <div class="notice notice-success is-dismissible">
-            <p><?php esc_html_e( 'The shipping tracking email has been sent to the customer.', 'open-shipping-tracking' ); ?></p>
-        </div>
-        <?php
+    $notice_type = get_transient( 'ost_manual_email_sent_notice_' . get_current_user_id() );
+    if ( $notice_type ) {
+        if ( 'success' === $notice_type ) {
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php esc_html_e( 'The shipping tracking email has been sent to the customer.', 'open-shipping-tracking' ); ?></p>
+            </div>
+            <?php
+        } elseif ( 'error' === $notice_type ) {
+            ?>
+            <div class="notice notice-error is-dismissible">
+                <p><?php esc_html_e( 'Failed to send the shipping tracking email. Please try again or check the error logs.', 'open-shipping-tracking' ); ?></p>
+            </div>
+            <?php
+        }
         delete_transient( 'ost_manual_email_sent_notice_' . get_current_user_id() );
     }
 }
